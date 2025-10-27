@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import type { Case } from '../types';
 import { rooms } from '../data/mockData';
@@ -5,6 +6,7 @@ import { AISuggestionsPanel } from './AISuggestionsPanel';
 import { CaseCard } from './CaseCard';
 import { InputScheduleModal } from './InputScheduleModal';
 import { enrichCaseDetails, optimizeSchedule, type CaseInput } from '../services/geminiService';
+import * as db from '../services/databaseService';
 
 const minutesToTime = (minutes: number): string => {
   const hours = Math.floor(minutes / 60);
@@ -14,13 +16,13 @@ const minutesToTime = (minutes: number): string => {
 
 interface ScheduleViewProps {
     cases: Case[];
-    setCases: React.Dispatch<React.SetStateAction<Case[]>>;
+    onDataChange: () => void;
     onCaseSelect: (c: Case | null) => void;
     selectedCase: Case | null;
     selectedDate: Date;
 }
 
-export const ScheduleView: React.FC<ScheduleViewProps> = ({ cases, setCases, onCaseSelect, selectedCase, selectedDate }) => {
+export const ScheduleView: React.FC<ScheduleViewProps> = ({ cases, onDataChange, onCaseSelect, selectedCase, selectedDate }) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -39,7 +41,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({ cases, setCases, onC
   const handleAddCase = async (caseInput: CaseInput) => {
     try {
         const newCase = await enrichCaseDetails(caseInput);
-        setCases(prevCases => [...prevCases, newCase].sort((a, b) => a.startTime.localeCompare(b.startTime)));
+        await db.addCase(newCase);
+        onDataChange();
     } catch (error) {
         console.error("Failed to add case:", error);
         // Re-throw to be caught by the modal for UI feedback
@@ -51,7 +54,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({ cases, setCases, onC
     setIsOptimizing(true);
     try {
       const optimizedCases = await optimizeSchedule(cases);
-      setCases(optimizedCases);
+      await db.updateCases(optimizedCases);
+      onDataChange();
     } catch (error) {
       console.error("Failed to optimize schedule:", error);
       // You could add a user-facing error message here
