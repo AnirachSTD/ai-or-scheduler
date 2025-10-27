@@ -48,7 +48,7 @@ interface CaseCardProps {
 }
 
 export const CaseCard: React.FC<CaseCardProps> = ({ caseData, onSelect, isSelected, scheduleStartMinutes, pixelsPerMinute }) => {
-  const { procedure, surgeon, startTime, aiP50Minutes, turnoverMinutes, patientId, conflicts } = caseData;
+  const { procedure, surgeon, startTime, aiP50Minutes, turnoverMinutes, patientId, conflicts, priority, risk } = caseData;
 
   const startMinutes = timeToMinutes(startTime) - scheduleStartMinutes;
   const caseHeight = aiP50Minutes * pixelsPerMinute;
@@ -61,6 +61,25 @@ export const CaseCard: React.FC<CaseCardProps> = ({ caseData, onSelect, isSelect
     'Emergent': 'border-red-500',
   };
 
+  const specialStyling = useMemo(() => {
+    if (priority === 'Emergent') {
+        return {
+            bgColor: 'bg-red-50 dark:bg-red-900/60',
+            ring: 'ring-1 ring-red-500/75',
+        };
+    }
+    if (risk === 'High') {
+        return {
+            bgColor: 'bg-yellow-50 dark:bg-yellow-900/50',
+            ring: '',
+        };
+    }
+    return {
+        bgColor: 'bg-white dark:bg-gray-800',
+        ring: '',
+    };
+  }, [priority, risk]);
+
   const conflictIcons = useMemo(() => getConflictIcons(conflicts), [conflicts]);
 
   return (
@@ -69,9 +88,9 @@ export const CaseCard: React.FC<CaseCardProps> = ({ caseData, onSelect, isSelect
       style={{ top: `${topPosition}px`, height: `${caseHeight + turnoverHeight}px` }}
       onClick={() => onSelect(caseData)}
     >
-        <div className={`relative h-full w-full flex flex-col rounded-lg shadow-md group-hover:shadow-xl border-l-4 ${priorityColor[caseData.priority]} ${isSelected ? 'ring-2 ring-indigo-500' : ''}`}>
+        <div className={`relative h-full w-full flex flex-col rounded-lg shadow-md group-hover:shadow-xl border-l-4 ${priorityColor[caseData.priority]} ${isSelected ? 'ring-2 ring-indigo-500' : specialStyling.ring}`}>
             <div 
-                className="bg-white dark:bg-gray-800 p-2 flex-grow overflow-hidden rounded-t-lg relative"
+                className={`${specialStyling.bgColor} p-2 flex-grow overflow-hidden rounded-t-lg relative`}
                 style={{ height: `${caseHeight}px` }}
             >
                 <p className="font-bold text-sm text-gray-800 dark:text-gray-100 leading-tight pr-8">{procedure}</p>
@@ -79,13 +98,14 @@ export const CaseCard: React.FC<CaseCardProps> = ({ caseData, onSelect, isSelect
                 <p className="text-xs text-gray-500 dark:text-gray-400">{surgeon}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{startTime} ({aiP50Minutes}m)</p>
 
-                {conflictIcons.length > 0 && (
-                    <div className="absolute top-2 right-2 flex flex-col space-y-2">
-                        {conflictIcons.map(icon => (
-                            <i key={icon.key} className={`${icon.className} text-base`} title={icon.title}></i>
-                        ))}
-                    </div>
-                )}
+                <div className="absolute top-2 right-2 flex flex-col space-y-2">
+                     {risk === 'High' && !conflictIcons.some(icon => icon.key === 'pacu') && (
+                        <i className="fas fa-triangle-exclamation text-base text-red-500" title="High Risk Case"></i>
+                    )}
+                    {conflictIcons.map(icon => (
+                        <i key={icon.key} className={`${icon.className} text-base`} title={icon.title}></i>
+                    ))}
+                </div>
             </div>
             {turnoverMinutes > 0 && (
                 <div 
