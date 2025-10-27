@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { ScheduleView } from './components/ScheduleView';
@@ -48,7 +49,7 @@ const App: React.FC = () => {
           {renderView()}
         </main>
       </div>
-      <Chatbot />
+      <Chatbot cases={cases} />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 export type View = 'dashboard' | 'schedule' | 'analytics' | 'audit';
 
 export interface KPI {
@@ -11,7 +12,6 @@ export interface KPI {
 
 export interface Surgeon {
   id: string;
-  // FIX: The type should be string, not the literal "string".
   name: string;
 }
 

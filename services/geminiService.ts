@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import type { Case } from '../types';
 
@@ -13,17 +14,33 @@ export const startChat = () => {
   chat = ai.chats.create({
     model: 'gemini-2.5-flash',
     config: {
-      systemInstruction: 'You are a helpful assistant for an Operating Room scheduler. Your name is OrchestrateAI. Answer questions about OR scheduling, efficiency, and hospital operations concisely. You can also provide general information.',
+      systemInstruction: `You are a helpful assistant for an Operating Room scheduler. Your name is OrchestrateAI. 
+      You will be given the current day's OR schedule as JSON context with each prompt. 
+      Your primary role is to answer questions based *only* on this provided schedule data.
+      - Be concise and professional.
+      - When asked about a case, refer to it by the patientId (e.g., P001). 
+      - **CRITICAL:** Do not, under any circumstances, invent, assume, or mention any confidential patient information like names, specific diagnoses, or medical history. You are an operational assistant, not a clinical one.
+      - If asked a question you cannot answer from the schedule, state that the information is not available in the schedule.`,
     },
   });
 };
 
-export const sendMessage = (message: string) => {
+export const sendMessage = (message: string, cases: Case[]) => {
   if (!chat) {
     startChat();
   }
+
+  const scheduleContext = `
+    Current OR Schedule:
+    \`\`\`json
+    ${JSON.stringify(cases, null, 2)}
+    \`\`\`
+  `;
+
+  const fullMessage = `${scheduleContext}\n\nBased on the schedule above, please answer the user's question: "${message}"`;
+
   if (chat) {
-    return chat.sendMessageStream({ message });
+    return chat.sendMessageStream({ message: fullMessage });
   }
   throw new Error("Chat not initialized");
 };

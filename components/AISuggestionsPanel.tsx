@@ -19,6 +19,36 @@ const InfoPill: React.FC<{ label: string, value: string, icon: string, colorClas
     </div>
 );
 
+const AiSummaryDisplay: React.FC<{ summary: string }> = ({ summary }) => {
+    // Split by newline characters to process each line. Filter out empty lines.
+    const lines = summary.split('\n').filter(line => line.trim() !== '');
+
+    const renderLine = (text: string, key: number) => {
+        // This regex will split the text by the bold markers (**), keeping the markers.
+        // e.g., "Text with **bold content** and more" becomes ["Text with ", "**bold content**", " and more"]
+        const parts = text.split(/(\*\*.*?\*\*)/g);
+
+        return (
+            <p key={key}>
+                {parts.map((part, index) => {
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                        // It's a bold part
+                        return <strong key={index} className="text-gray-800 dark:text-gray-200">{part.slice(2, -2)}</strong>;
+                    }
+                    // It's a regular text part
+                    return part;
+                })}
+            </p>
+        );
+    };
+
+    return (
+        <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg space-y-2">
+            {lines.map((line, index) => renderLine(line, index))}
+        </div>
+    );
+};
+
 
 const DailyAnalysisView: React.FC<{ cases: Case[] }> = ({ cases }) => {
     const [summary, setSummary] = useState('');
@@ -70,7 +100,7 @@ const DailyAnalysisView: React.FC<{ cases: Case[] }> = ({ cases }) => {
                             </div>
                         </div>
                     ) : (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg whitespace-pre-wrap">{summary}</p>
+                        <AiSummaryDisplay summary={summary} />
                     )}
                 </div>
             </div>
