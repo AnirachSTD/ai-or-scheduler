@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import type { Case } from '../types';
 import { rooms } from '../data/mockData';
@@ -26,6 +25,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({ cases, onDataChange,
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [draggedOverRoom, setDraggedOverRoom] = useState<string | null>(null);
 
 
   const START_HOUR = 7;
@@ -62,6 +62,42 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({ cases, onDataChange,
     } finally {
       setIsOptimizing(false);
     }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>, roomName: string) => {
+    e.preventDefault();
+    setDraggedOverRoom(null);
+    const caseId = e.dataTransfer.getData('caseId');
+    if (!caseId) return;
+    
+    const droppedCase = cases.find(c => c.id === caseId);
+    if (!droppedCase) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offsetY = e.clientY - rect.top;
+    const minutesFromScheduleStart = Math.round(offsetY / PIXELS_PER_MINUTE);
+    const newStartTime = minutesToTime(START_HOUR * 60 + minutesFromScheduleStart);
+    
+    const updatedCase: Case = {
+      ...droppedCase,
+      room: roomName,
+      startTime: newStartTime,
+    };
+    
+    await db.updateCase(updatedCase);
+    onDataChange();
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, roomName: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedOverRoom !== roomName) {
+        setDraggedOverRoom(roomName);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    setDraggedOverRoom(null);
   };
 
 
@@ -157,7 +193,13 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({ cases, onDataChange,
                     {/* Room Columns */}
                     <div className="flex-grow grid grid-cols-4 h-full">
                         {rooms.map((room) => (
-                            <div key={room.id} className={`relative h-full border-l border-gray-200 dark:border-gray-700`}>
+                            <div 
+                                key={room.id} 
+                                className={`relative h-full border-l border-gray-200 dark:border-gray-700 transition-colors ${draggedOverRoom === room.name ? 'bg-blue-50 dark:bg-blue-900/40' : ''}`}
+                                onDrop={(e) => handleDrop(e, room.name)}
+                                onDragOver={(e) => handleDragOver(e, room.name)}
+                                onDragLeave={handleDragLeave}
+                            >
                                 {/* Background lines */}
                                 {timeSlots.map(({time, minutes, isHour}) => (
                                     <div key={time} className={`absolute w-full border-t ${isHour ? 'border-gray-200 dark:border-gray-700/50' : 'border-dashed border-gray-100 dark:border-gray-800'}`} style={{ top: `${minutes * PIXELS_PER_MINUTE}px` }}></div>

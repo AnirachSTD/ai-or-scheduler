@@ -1,4 +1,3 @@
-
 import { cases as mockCases, surgeons as mockSurgeons, rooms as mockRooms } from '../data/mockData';
 import type { Case, Surgeon, Room } from '../types';
 
@@ -46,6 +45,16 @@ export const addCase = async (newCase: Case): Promise<void> => {
     const currentCases = await getCases();
     const updatedCases = [...currentCases, newCase];
     localStorage.setItem(CASES_KEY, JSON.stringify(updatedCases));
+};
+
+export const updateCase = async (updatedCase: Case): Promise<void> => {
+    await simulateDelay(50);
+    const currentCases = await getCases();
+    const caseIndex = currentCases.findIndex(c => c.id === updatedCase.id);
+    if (caseIndex > -1) {
+        currentCases[caseIndex] = updatedCase;
+        localStorage.setItem(CASES_KEY, JSON.stringify(currentCases));
+    }
 };
 
 export const updateCases = async (casesToUpdate: Case[]): Promise<void> => {

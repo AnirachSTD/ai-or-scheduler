@@ -82,9 +82,22 @@ export const CaseCard: React.FC<CaseCardProps> = ({ caseData, onSelect, isSelect
 
   const conflictIcons = useMemo(() => getConflictIcons(conflicts), [conflicts]);
 
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.setData('caseId', caseData.id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.style.opacity = '0.5';
+  };
+
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.style.opacity = '1';
+  };
+
   return (
     <div
-      className={`absolute left-1 right-1 flex flex-col cursor-pointer transition-all duration-200 group ${isSelected ? 'z-10' : 'z-0'}`}
+      draggable="true"
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      className={`absolute left-1 right-1 flex flex-col cursor-grab transition-all duration-200 group ${isSelected ? 'z-10' : 'z-0'}`}
       style={{ top: `${topPosition}px`, height: `${caseHeight + turnoverHeight}px` }}
       onClick={() => onSelect(caseData)}
     >
