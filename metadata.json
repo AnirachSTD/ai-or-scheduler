@@ -1,0 +1,5 @@
+{
+  "name": "OrchestrateAI: OR Scheduler",
+  "description": "An AI-assisted operating room scheduling and utilization platform designed to reduce delays, decrease overtime, and improve block utilization through intelligent predictions and optimization.",
+  "requestFramePermissions": []
+}
