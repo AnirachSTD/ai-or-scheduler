@@ -17,9 +17,10 @@ interface ScheduleViewProps {
     setCases: React.Dispatch<React.SetStateAction<Case[]>>;
     onCaseSelect: (c: Case | null) => void;
     selectedCase: Case | null;
+    selectedDate: Date;
 }
 
-export const ScheduleView: React.FC<ScheduleViewProps> = ({ cases, setCases, onCaseSelect, selectedCase }) => {
+export const ScheduleView: React.FC<ScheduleViewProps> = ({ cases, setCases, onCaseSelect, selectedCase, selectedDate }) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
